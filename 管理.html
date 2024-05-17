@@ -22,12 +22,12 @@
 
 var ctx;
 var h=750,w=1050;
-var value=0;
+var customer_count=0;
 var clock_radius = 50;
 
 var paint_clock = 0.05;
 
-var default_timelimit = [10/paint_clock,10/paint_clock,10/paint_clock];
+var default_timelimit = [420/paint_clock,360/paint_clock,480/paint_clock];
 var table_x = [200,400,600,800,450,600,750,450,600,750];
 var table_y = [150,150,150,150,320,320,320,550,550,550];
 var table_rem = [0,0,0,0,0,0,0,0,0,0];
@@ -65,6 +65,8 @@ function onClick(e) {
 						}
 						else{
 							table_castcount[i]=0;
+							customer_count+=1;
+							document.getElementById("customer_count").innerHTML = customer_count;
 						}
 					}
 					else{
@@ -136,6 +138,8 @@ function init(){
 	ctx.font="25px ヒラギノ明朝 ProN W3";
 	canvas.addEventListener('click', onClick, false);
 	canvas.addEventListener('mousemove', onMouseMove, false);
+
+	document.getElementById("customer_count").innerHTML = customer_count;
 };
 
 var cyan = "#f0f8ff";
@@ -215,7 +219,7 @@ const repaint = function(){
 				write_arc(table_x[i],table_y[i],rrate,rem_percent,skyblue);
 
 				if(table_is_stopping[i]==1){
-					txt = "停止";
+					txt = "停止中";
 				}
 				else{
 					table_rem[i]-=1;
@@ -224,7 +228,7 @@ const repaint = function(){
 			
 			ctx.fillStyle="#000000";
 			var xcoord = table_x[i];
-			if(txt == "延長終") xcoord -=37;
+			if(txt == "延長終" || txt == "停止中") xcoord -=37;
 			else if(txt.length == 2)xcoord -=25;
 			else xcoord -=33;
 			ctx.fillText(txt,xcoord,table_y[i]+8);
@@ -254,7 +258,10 @@ window.onbeforeunload = function(e) {
 <body onload="main()">
 	
 	<canvas id="canvas" width="1050" height="750" ></canvas>
-	<br>
+	<h3>現在までの接客完了組数</h3>
+	<div id="customer_count"></div>
+
+	<h3>時間制限</h3>
 	<button type="button" name="button1" value="変更" onClick = "show_timelimit()">現在の時間制限を表示</button>
 	
 	<br>
