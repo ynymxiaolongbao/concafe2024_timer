@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+
+<head>
+
+<meta charset="utf-8">
+
+<title>管理</title>
+
+
+
+<style>
+
+</style>
+
+
+
+<script>
+	
+"use strict";
+
+var ctx;
+var h=750,w=1050;
+var value=0;
+var clock_radius = 50;
+
+var paint_clock = 0.05;
+
+var default_timelimit = 10/paint_clock;
+var extend_timelimit = 10/paint_clock;
+var table_x = [200,400,600,800,450,600,750,450,600,750];
+var table_y = [150,150,150,150,320,320,320,550,550,550];
+var table_rem = [0,0,0,0,0,0,0,0,0,0];
+var table_castcount = [0,0,0,0,0,0,0,0,0,0];
+var table_is_stopping = [0,0,0,0,0,0,0,0,0,0];
+	
+var mouse_x = 0;
+var mouse_y = 0;
+function dist(x1,y1,x2,y2){
+	return Math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2));
+}
+
+var isClicked = false;
+
+function onClick(e) {
+		/*
+			* rectでcanvasの絶対座標位置を取得し、
+			* クリック座標であるe.clientX,e.clientYからその分を引く
+			* ※クリック座標はdocumentからの位置を返すため
+			* ※rectはスクロール量によって値が変わるので、onClick()内でつど定義
+			*/
+		var rect = e.target.getBoundingClientRect();
+		mouse_x = e.clientX - rect.left;
+		mouse_y = e.clientY - rect.top;
+
+		if(isClicked){
+			/*double clicked*/
+			/*ctx.fillText("double clicked",300,30);*/
+
+			for( var i = 0; i < table_x.length; i++){
+				if (dist(table_x[i],table_y[i],mouse_x,mouse_y)<=clock_radius){
+					if(table_rem[i]==0){
+						if(table_castcount[i]<=2){
+							table_castcount[i]+=1;
+						}
+						else{
+							table_castcount[i]=0;
+						}
+					}
+					else{
+						table_rem[i]=0;
+					}
+				}
+			}
+			isClicked = false;
+
+		}
+		else{
+			
+			isClicked = true;
+
+			var cur_mouse_x = mouse_x;
+			var cur_mouse_y = mouse_y;
+			
+			setTimeout(function () {
+				if(isClicked){
+					
+			/*single clicked*/
+			/*ctx.fillText("single clicked",0,30);*/
+			for( var i = 0; i < table_x.length; i++){
+				if (dist(table_x[i],table_y[i],cur_mouse_x,cur_mouse_y)<=clock_radius){
+					if(table_rem[i]==0){
+						if(table_castcount[i]<=2){
+							table_rem[i]=default_timelimit;
+							table_castcount[i]+=1;
+						}
+						else{
+							table_rem[i]=0;
+							table_castcount[i]=0;
+						}
+					}
+					else{
+						table_is_stopping[i] ^= 1;
+					}
+				}
+			}
+
+			}
+			isClicked = false;
+			}, 300);
+		}
+
+};
+
+function onMouseMove(e){
+	var rect = e.target.getBoundingClientRect();
+	mouse_x = e.clientX - rect.left;
+	mouse_y = e.clientY - rect.top;
+}
+
+let map_image;
+
+function init(){
+	
+	var canvas=document.getElementById("canvas");
+	
+	if (!canvas || !canvas.getContext) {
+		return false;
+	}
+	
+	ctx=canvas.getContext("2d");
+	
+	map_image = new Image();
+	map_image.src = "map_image.png";
+	
+	ctx.font="25px ヒラギノ明朝 ProN W3";
+	canvas.addEventListener('click', onClick, false);
+	canvas.addEventListener('mousemove', onMouseMove, false);
+};
+
+var cyan = "#f0f8ff";
+var goodblue = "#D4ECEC";
+var skyblue = "#83CCD2";
+var blue = "#69AADE";
+var magenta = "#ff1493";
+var yellow = "#ffd700";
+var gray = "#a9a9a9";
+var lime = "#00fa9a";
+var white = "#ffffff";
+
+function write_arc(x,y,rrate,p,col){
+	ctx.fillStyle=col;
+	ctx.strokeStyle=col;
+	ctx.beginPath();
+	var base = -Math.PI/2;
+	ctx.arc(x, y, clock_radius*rrate, base, base-2*Math.PI*p, true);
+	ctx.lineTo(x,y);
+	ctx.closePath();
+	ctx.stroke();
+	ctx.fill();
+};
+
+
+const repaint = function(){
+	
+	/*背景の色*/
+	ctx.fillStyle="#e6e6fa";
+	ctx.fillRect(0,0,w,h);
+	
+	ctx.strokeStyle="#000000";
+	ctx.fillStyle="#000000";
+
+	/*描画*/
+	/*map_image.onload = function () {*/
+		ctx.drawImage(map_image, 40, 40);
+		for( var i = 0; i < table_x.length; i++){
+			var rrate = 1;
+			if (dist(table_x[i],table_y[i],mouse_x,mouse_y)<=clock_radius){
+				rrate =1.1;
+				if(isClicked == 1){
+					rrate =0.95;
+				}
+			}
+			var txt = "";
+			if(table_castcount[i]==0){
+				write_arc(table_x[i],table_y[i],rrate,1,cyan);
+				txt="空き";
+			}
+			else if (table_rem[i] == 0){
+				
+				if(table_castcount[i]==1){
+					write_arc(table_x[i],table_y[i],rrate,1,magenta);
+				}
+				else{
+					write_arc(table_x[i],table_y[i],rrate,1,yellow);
+				}
+
+				if (table_castcount[i]<=2){
+					txt=table_castcount[i].toString()+"人終";
+				}
+				else{
+					txt="延長終";
+				}
+			}
+			else{
+				var rem_percent;
+				if(table_castcount[i]<=2){
+					rem_percent=table_rem[i]/default_timelimit,blue;
+					txt=table_castcount[i].toString()+"人目";
+				}
+				else{
+					rem_percent=table_rem[i]/extend_timelimit,blue;
+					txt="延長";
+				}
+				write_arc(table_x[i],table_y[i],rrate,1,goodblue);
+				write_arc(table_x[i],table_y[i],rrate,rem_percent,skyblue);
+
+				if(table_is_stopping[i]==1){
+					txt = "停止";
+				}
+				else{
+					table_rem[i]-=1;
+				}
+			}
+			
+			ctx.fillStyle="#000000";
+			var xcoord = table_x[i];
+			if(txt == "延長終") xcoord -=37;
+			else if(txt.length == 2)xcoord -=25;
+			else xcoord -=33;
+			ctx.fillText(txt,xcoord,table_y[i]+8);
+
+		}
+	/*}*/
+};
+
+function main (){
+	init();
+	const timer = setTimeout(setInterval(repaint, 1000*paint_clock),1000);
+};
+
+function change_timelimit(){
+	var tl = timelimit_form.timelimit.value;
+	if (tl <= 0){
+			alert("正の値を入力してください");   
+	}else{
+		default_timelimit = tl/paint_clock;
+		show_timelimit();
+	}
+}
+
+function change_exttimelimit(){
+	var tl = exttimelimit_form.exttimelimit.value;
+	if (tl <= 0){
+			alert("正の値を入力してください");   
+	}else{
+		extend_timelimit = tl/paint_clock;
+		show_timelimit();
+	}
+}
+
+function show_timelimit(){
+	alert("通常："+(default_timelimit*paint_clock).toString()+"秒，延長："+(extend_timelimit*paint_clock).toString()+"秒");
+}
+
+window.onbeforeunload = function(e) {
+	e.returnValue = "ページを離れようとしています。よろしいですか？";
+}
+
+</script>
+
+
+
+</head>
+
+
+
+<body onload="main()">
+
+	<canvas id="canvas" width="1050" height="750" ></canvas>
+
+	
+	<form action="xxx.html" method="get" name="timelimit_form">
+		通常時間制限：<input type="number" size = "30" placeholder = 360 name="timelimit">
+		<button type="button" name="button1" value="変更" onClick = "change_timelimit()">変更</button>
+	</form>
+	<form action="xxx.html" method="get" name="exttimelimit_form">
+		キャスドリ時間制限：<input type="number" placeholder = 480 name="exttimelimit">
+		<button type="button" name="button2" value="変更" onClick = "change_exttimelimit()">変更</button>
+	</form>
+	<button type="button" name="button1" value="変更" onClick = "show_timelimit()">現在の時間制限を表示</button>
+
+
+	<h2>見方</h2>
+	<p>ピンク色の表示があったら、そこにキャストを向かわせる必要がある。</p>
+	<p>黄色の表示があったら、そこに黒服を向かわせる必要がある。</p>
+	<p>「空き」の表示があったら、そこが使える机で、かつキャストと黒服が足りているなら、そこに両方を向かわせる必要がある。</p>
+
+	<h2>仕様</h2>
+	<p>基本的には各テーブルにある丸い所をクリックすれば次の段階に進む。タイマーが動いているときにクリックすると一時停止する。</p>
+	<p>ダブルクリックするとタイマーの時間を消費させて強制的に次の段階に進む。</p>
+	<p>恐らく何をしても壊れないので、色々やってみると良い。（クリック連打など）</p>
+
+	<h2>注意</h2>
+	<p>一旦ページを閉じると、全てのタイマーや状態がリセットされてしまう。そのため、動かしている途中に×を押したリロードしてはいけない。</p>
+	<p>このページが見られている時にしかタイマーは進まない。そのため、例えば長時間ブラウザを最小化するのは良くない。</p>
+	
+	<h2>使い方の例</h2>
+	<p>「空き」の場合：黒服を入口に向かわせ、客を入れる。キャストをテーブルに向かわせる。両方が着いたら一回クリックする。</p>
+	<p>「1人目」の場合：何もしない。（終わりが近づいてきたら、次そこに向かうキャストの目途を付ける。）</p>
+	<p>「1人終」の場合：キャストをテーブルに向かわせる。キャストが着いたら一回クリックする。</p>
+	<p>「2人目」の場合：何もしない。（終わりが近づいてきたら、次そこに向かう黒服の目途を付ける。）</p>
+	<p>「2人終」の場合：黒服をテーブルに向かわせる。延長があった場合、一回クリックする。延長が無い場合、三回連続でクリックする。</p>
+	<p>「延長」の場合：「2人目」と同じ。</p>
+	<p>「延長終」の場合：黒服をテーブルに向かわせる。一回クリックする。</p>
+	<p> タイマーが動いている間に一回クリックすると「停止」となる。もう一度クリックすると再開する。</p>
+
+
+
+
+</body>
+
+</html>
+
