@@ -239,9 +239,9 @@ function main (){
 };
 
 
-window.onbeforeunload = function(e) {
+/*window.onbeforeunload = function(e) {
 	e.returnValue = "ページを離れようとしています。よろしいですか？";
-}
+}*/
 
 </script>
 
@@ -258,40 +258,37 @@ window.onbeforeunload = function(e) {
 	<button type="button" name="button1" value="変更" onClick = "show_timelimit()">現在の時間制限を表示</button>
 	
 	<br>
-	<form>
+  <form>
+    <label for="inputText">テキスト入力:</label>
+    <input type="text" id="inputText" name="inputText">
+    <button type="button" onclick="displayText()">表示</button>
+  </form>
+
+  <form>
 		<label for="timelimit0">1人目時間制限：</label>
 		<input type="number" placeholder = "420目安?" id="timelimit0" name = "timelimit0">
-		<button type="button" name="button1" value="変更" onClick = "change_timelimit(0)">変更</button>
+		<button type="button" onClick = "change_timelimit(0)">変更</button>
 	</form>
-	<form>
-		<label for="timelimit1">2人目時間制限：</label>
-		<input type="number" placeholder = "360目安?" id="timelimit1" name = "timelimit1">
-		<button type="button" name="button1" value="変更" onClick = "change_timelimit(1)">変更</button>
-	</form>
-	<form>
-		<label for="timelimit2">延長時間制限：</label>
-		<input type="number" placeholder = "480目安?" id="timelimit2" name = "timelimit2">
-		<button type="button" name="button1" value="変更" onClick = "change_timelimit(2)">変更</button>
-	</form>
-	
-	<br>
 	
 	<script>
-	function change_timelimit(i){
-		var tl = document.getElementById("timelimit"+i.toString()).value;
-		if (tl <= 0){
-				alert("正の値を入力してください");   
-		}else{
-			default_timelimit[i] = tl/paint_clock;
-			show_timelimit();
-		}
-	}
-	
-	function show_timelimit(){
-		alert("1人目："+(default_timelimit[0]*paint_clock).toString()+"秒，2人目："+(default_timelimit[1]*paint_clock).toString()+"秒，延長："+(default_timelimit[2]*paint_clock).toString()+"秒");
-	}
+    function displayText() {
+      var inputText = document.getElementById("inputText").value;
+      alert(inputText);
+    }
 
-</script>
+    function change_timelimit(i){
+      alert(1);
+      var tl = document.getElementById("timelimit0").value;
+      alert(2);
+      alert(tl);
+      if (tl <= 0){
+          alert("正の値を入力してください");   
+      }else{
+        default_timelimit[i] = tl/paint_clock;
+        show_timelimit();
+      }
+    }
+  </script>
 		
 
 
