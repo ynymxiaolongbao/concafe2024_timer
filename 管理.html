@@ -65,8 +65,6 @@ function onClick(e) {
 						}
 						else{
 							table_castcount[i]=0;
-							customer_count+=1;
-							document.getElementById("customer_count").innerHTML = customer_count;
 						}
 					}
 					else{
@@ -93,6 +91,10 @@ function onClick(e) {
 				if (dist(table_x[i],table_y[i],cur_mouse_x,cur_mouse_y)<=clock_radius){
 					if(table_rem[i]==0){
 						if(table_castcount[i]<=2){
+							if(table_castcount[i]==0){
+								customer_count+=1;
+								document.getElementById("customer_count").innerHTML = customer_count;
+							}
 							table_rem[i]=default_timelimit[table_castcount[i]];
 							table_castcount[i]+=1;
 						}
@@ -258,7 +260,7 @@ window.onbeforeunload = function(e) {
 <body onload="main()">
 	
 	<canvas id="canvas" width="1050" height="750" ></canvas>
-	<h3>現在までの接客完了組数</h3>
+	<h3>現在までの入店組数</h3>
 	<div id="customer_count"></div>
 
 	<h3>時間制限</h3>
