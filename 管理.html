@@ -24,14 +24,20 @@ var ctx;
 var h=1050,w=1550;
 var customer_count=0;
 var clock_radius = 50;
+var ext_radius = 30;
+var ext_dx = -80;
+var ext_dy = -10;
 
 var paint_clock = 0.05;
 
-var default_timelimit = [420/paint_clock,360/paint_clock,480/paint_clock];
-var table_x = [270,270,270,270,270,270,750,750,750,750,1210,1210,1210,1210];
+/*var default_timelimit = [420/paint_clock,360/paint_clock,480/paint_clock];*/
+var default_timelimit = [30/paint_clock,30/paint_clock,30/paint_clock];
+var table_x = [270,270,270,270,270,270,750,750,750,750,1230,1230,1230,1230];
 var table_y = [175,280,385,490,595,700,375,480,585,690,185,335,485,635];
 var table_rem = [0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 var table_castcount = [0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+var table_isextend = [0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+var table_willextend = [0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 var table_is_stopping = [0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 	
 var mouse_x = 0;
@@ -59,17 +65,7 @@ function onClick(e) {
 
 			for( var i = 0; i < table_x.length; i++){
 				if (dist(table_x[i],table_y[i],mouse_x,mouse_y)<=clock_radius){
-					if(table_rem[i]==0){
-						if(table_castcount[i]<=2){
-							table_castcount[i]+=1;
-						}
-						else{
-							table_castcount[i]=0;
-						}
-					}
-					else{
-						table_rem[i]=0;
-					}
+					table_rem[i]=0;
 				}
 			}
 			isClicked = false;
@@ -86,17 +82,18 @@ function onClick(e) {
 				if(isClicked){
 					
 			/*single clicked*/
-			/*ctx.fillText("single clicked",0,30);*/
+			/*clock ball*/
 			for( var i = 0; i < table_x.length; i++){
 				if (dist(table_x[i],table_y[i],cur_mouse_x,cur_mouse_y)<=clock_radius){
-					if(table_rem[i]==0){
-						if(table_castcount[i]<=2){
+					if(table_rem[i]==0&&table_willextend[i]==0){
+						if(table_castcount[i]<2){
 							if(table_castcount[i]==0){
 								customer_count+=1;
 								document.getElementById("customer_count").innerHTML = customer_count;
 							}
 							table_rem[i]=default_timelimit[table_castcount[i]];
 							table_castcount[i]+=1;
+							table_isextend[i]=0;
 						}
 						else{
 							table_rem[i]=0;
@@ -106,6 +103,19 @@ function onClick(e) {
 					else{
 						table_is_stopping[i] ^= 1;
 					}
+				}
+			}
+
+			/*ext ball*/
+			for( var i = 0; i < table_x.length; i++){
+				if (dist(table_x[i]+ext_dx,table_y[i]+ext_dy,cur_mouse_x,cur_mouse_y)<=ext_radius){
+					if(table_castcount[i]>0)
+						table_willextend[i]^=1;
+						if(table_rem[i] == 0 && table_willextend[i] == 1){
+							table_rem[i] = default_timelimit[2];
+							table_willextend[i] =0;
+							table_isextend[i] =1;
+						}
 				}
 			}
 
@@ -179,6 +189,23 @@ const repaint = function(){
 	/*描画*/
 	/*map_image.onload = function () {*/
 		ctx.drawImage(map_image, 40, 40);
+
+		/*ext ball*/
+		for( var i = 0; i < table_x.length; i++){
+			var rrate = 1;
+			if (dist(table_x[i]+ext_dx,table_y[i]+ext_dy,mouse_x,mouse_y)<=ext_radius){
+				rrate =1.1;
+				if(isClicked == 1){
+					rrate =0.95;
+				}
+			}
+			write_arc(table_x[i]+ext_dx,table_y[i]+ext_dy,ext_radius/clock_radius*rrate,1,goodblue);
+			ctx.fillStyle="#000000";
+			var xcoord = table_x[i]+ext_dx-10;
+			ctx.fillText(table_willextend[i].toString(),xcoord,table_y[i]+ext_dy+7);
+		}
+
+		/*clock ball*/
 		for( var i = 0; i < table_x.length; i++){
 			var rrate = 1;
 			if (dist(table_x[i],table_y[i],mouse_x,mouse_y)<=clock_radius){
@@ -201,22 +228,24 @@ const repaint = function(){
 					write_arc(table_x[i],table_y[i],rrate,1,yellow);
 				}
 
-				if (table_castcount[i]<=2){
+				if (table_isextend[i] == 0){
 					txt=table_castcount[i].toString()+"人終";
 				}
 				else{
-					txt="延長終";
+					txt="延"+table_castcount[i].toString()+"終";
 				}
 			}
 			else{
 				var rem_percent;
-				rem_percent=table_rem[i]/default_timelimit[table_castcount[i]-1],blue;
-				if(table_castcount[i]<=2){
+				var tl;
+				if (table_isextend[i] == 0) tl = default_timelimit[table_castcount[i]-1];
+				else tl = default_timelimit[2];
+				rem_percent=table_rem[i]/tl;
+				if(table_isextend[i] == 0 )
 					txt=table_castcount[i].toString()+"人目";
-				}
-				else{
-					txt="延長";
-				}
+				else
+					txt="延長"+table_castcount[i].toString();
+
 				write_arc(table_x[i],table_y[i],rrate,1,goodblue);
 				write_arc(table_x[i],table_y[i],rrate,rem_percent,skyblue);
 
@@ -225,6 +254,11 @@ const repaint = function(){
 				}
 				else{
 					table_rem[i]-=1;
+					if(table_rem[i]==0&&table_willextend[i]>0){
+						table_rem[i]=default_timelimit[2];
+						table_willextend[i]=0;
+						table_isextend[i]=1;
+					}
 				}
 			}
 			
@@ -308,27 +342,17 @@ window.onbeforeunload = function(e) {
 	<p>ピンク色の表示があったら、そこにキャストを向かわせる必要がある。</p>
 	<p>黄色の表示があったら、そこに黒服を向かわせる必要がある。</p>
 	<p>「空き」の表示があったら、そこが使える机で、かつキャストと黒服が足りているなら、そこに両方を向かわせる必要がある。</p>
+	<p> 左の〇は、今後キャスドリによる延長があるかどうかを表す。現在延長中の場合は0となる。</p>
 
 	<h2>仕様</h2>
 	<p>基本的には各テーブルにある丸い所をクリックすれば次の段階に進む。タイマーが動いているときにクリックすると一時停止する。</p>
 	<p>ダブルクリックするとタイマーの時間を消費させて強制的に次の段階に進む。</p>
+	<p>キャストドリンクが入ったら小さな〇をクリックする。間違えたらもう一度クリックすれば戻せる。</p>
 	<p>恐らく何をしても壊れないので、色々やってみると良い。（クリック連打など）</p>
 
 	<h2>注意</h2>
 	<p>一旦ページを閉じると、全てのタイマーや状態がリセットされてしまう。そのため、動かしている途中に×を押したリロードしてはいけない。</p>
 	<p>このページが見られている時にしかタイマーは進まない。そのため、例えば長時間ブラウザを最小化するのは良くない。</p>
-	
-	<h2>使い方の例</h2>
-	<p>「空き」の場合：黒服を入口に向かわせ、客を入れる。キャストをテーブルに向かわせる。両方が着いたら一回クリックする。</p>
-	<p>「1人目」の場合：何もしない。（終わりが近づいてきたら、次そこに向かうキャストの目途を付ける。）</p>
-	<p>「1人終」の場合：キャストをテーブルに向かわせる。キャストが着いたら一回クリックする。</p>
-	<p>「2人目」の場合：何もしない。（終わりが近づいてきたら、次そこに向かう黒服の目途を付ける。）</p>
-	<p>「2人終」の場合：黒服をテーブルに向かわせる。延長があった場合、一回クリックする。延長が無い場合、三回連続でクリックする。</p>
-	<p>「延長」の場合：「2人目」と同じ。</p>
-	<p>「延長終」の場合：黒服をテーブルに向かわせる。一回クリックする。</p>
-	<p> タイマーが動いている間に一回クリックすると「停止」となる。もう一度クリックすると再開する。</p>
-
-
 
 
 </body>
