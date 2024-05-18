@@ -21,18 +21,18 @@
 "use strict";
 
 var ctx;
-var h=750,w=1050;
+var h=1050,w=1550;
 var customer_count=0;
 var clock_radius = 50;
 
 var paint_clock = 0.05;
 
 var default_timelimit = [420/paint_clock,360/paint_clock,480/paint_clock];
-var table_x = [200,400,600,800,450,600,750,450,600,750];
-var table_y = [150,150,150,150,320,320,320,550,550,550];
-var table_rem = [0,0,0,0,0,0,0,0,0,0];
-var table_castcount = [0,0,0,0,0,0,0,0,0,0];
-var table_is_stopping = [0,0,0,0,0,0,0,0,0,0];
+var table_x = [270,270,270,270,270,270,750,750,750,750,1210,1210,1210,1210];
+var table_y = [175,280,385,490,595,700,375,480,585,690,185,335,485,635];
+var table_rem = [0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+var table_castcount = [0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+var table_is_stopping = [0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 	
 var mouse_x = 0;
 var mouse_y = 0;
@@ -135,7 +135,7 @@ function init(){
 	ctx=canvas.getContext("2d");
 	
 	map_image = new Image();
-	map_image.src = "map_image.png";
+	map_image.src = "map_day2.png";
 	
 	ctx.font="25px ヒラギノ明朝 ProN W3";
 	canvas.addEventListener('click', onClick, false);
@@ -259,7 +259,7 @@ window.onbeforeunload = function(e) {
 
 <body onload="main()">
 	
-	<canvas id="canvas" width="1050" height="750" ></canvas>
+	<canvas id="canvas" width="1550" height="1050" ></canvas>
 	<h3>現在までの入店組数</h3>
 	<div id="customer_count"></div>
 
